@@ -9,9 +9,20 @@ services:
       - ACTIVEMQ_ADMIN_PASSWORD=admin
 
   frontend:
-    build: ../message-frontend
+    build: ./message-frontend
     ports:
       - "8080:8080"
+    environment:
+      - SPRING_ACTIVEMQ_BROKER_URL=tcp://activemq:61616
+      - SPRING_ACTIVEMQ_USER=admin
+      - SPRING_ACTIVEMQ_PASSWORD=admin
+    depends_on:
+      - activemq
+
+  backend:
+    build: ./message-backend
+    ports:
+      - "8082:8082"
     environment:
       - SPRING_ACTIVEMQ_BROKER_URL=tcp://activemq:61616
       - SPRING_ACTIVEMQ_USER=admin
