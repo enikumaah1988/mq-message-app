@@ -21,8 +21,17 @@ public class Message {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 } 

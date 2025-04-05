@@ -1,15 +1,16 @@
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: messagedb
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-character-set=utf8mb4
 
   activemq:
     image: rmohr/activemq:5.15.9
@@ -19,6 +20,20 @@ services:
     environment:
       - ACTIVEMQ_ADMIN_LOGIN=admin
       - ACTIVEMQ_ADMIN_PASSWORD=admin
+
+  backend:
+    build: 
+      context: ./message-backend
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+      - activemq
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/messagedb?characterEncoding=UTF-8&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_ACTIVEMQ_BROKER_URL: tcp://activemq:61616
 
   frontend:
     build: ./message-frontend
@@ -30,20 +45,6 @@ services:
       - SPRING_ACTIVEMQ_PASSWORD=admin
     depends_on:
       - activemq
-
-  backend:
-    build: 
-      context: ./message-backend
-    ports:
-      - "8082:8082"
-    depends_on:
-      - mysql
-      - activemq
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/messagedb
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
-      SPRING_ACTIVEMQ_BROKER_URL: tcp://activemq:61616
 
 volumes:
   mysql_data: 
