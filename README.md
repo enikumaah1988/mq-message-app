@@ -63,13 +63,32 @@ mq-message-app/
 │   └── src/
 │       └── main/
 │           ├── java/       # Javaソースコード
-│           └── resources/  # 設定ファイル
+│           │   └── com/example/frontend/
+│           │       ├── MessageFrontendApplication.java  # アプリケーションエントリーポイント
+│           │       ├── controller/    # コントローラー（画面制御）
+│           │       ├── service/      # ビジネスロジック
+│           │       ├── repository/   # データアクセス
+│           │       └── config/       # アプリケーション設定
+│           └── resources/
+│               ├── templates/           # Thymeleafテンプレート
+│               │   ├── base.html       # 共通レイアウト
+│               │   ├── index.html      # メインページ
+│               │   └── fragments/      # 再利用可能なフラグメント
+│               │       ├── header.html # ヘッダー部分
+│               │       └── footer.html # フッター部分
+│               └── static/            # 静的リソース
 └── message-backend/         # バックエンドアプリケーション
     ├── Dockerfile          # バックエンドのコンテナ定義
     ├── pom.xml            # Mavenプロジェクト設定
     └── src/
         └── main/
             ├── java/      # Javaソースコード
+            │   └── com/example/backend/
+            │       ├── MessageBackendApplication.java  # アプリケーションエントリーポイント
+            │       ├── entity/      # データモデル
+            │       ├── repository/  # データアクセス
+            │       ├── service/     # ビジネスロジック
+            │       └── listener/    # メッセージリスナー
             └── resources/
                 └── db/
                     └── migration/  # Flywayマイグレーションファイル
@@ -79,19 +98,22 @@ mq-message-app/
 ### コンポーネント詳細
 
 #### message-frontend
-- メッセージ送信用Webアプリケーション
+- メッセージ管理用Webアプリケーション
 - ポート: 8080
 - 主な機能:
-  - メッセージ送信フォーム提供
-  - ActiveMQへのメッセージ送信
+  - メッセージの表示（MySQLから直接）
+  - メッセージの作成/更新/削除（ActiveMQ経由）
+  - ページネーション処理
+  - レスポンシブなUI提供
+  - 操作フィードバック表示
 
 #### message-backend
 - メッセージ処理アプリケーション
 - ポート: 8082
 - 主な機能:
-  - ActiveMQからのメッセージ受信
-  - MySQLへのメッセージ保存
-  - 受信メッセージのログ出力
+  - ActiveMQからの更新メッセージ受信
+  - MySQLへのデータ操作（CRUD）
+  - トランザクション管理
   - Flywayによるデータベースマイグレーション
 
 #### ActiveMQ
@@ -101,7 +123,8 @@ mq-message-app/
   - 8161 (管理コンソール)
 - 機能:
   - メッセージキューの管理
-  - フロントエンドとバックエンド間のメッセージ仲介
+  - 更新操作のメッセージ仲介
+  - 非同期処理の実現
 
 #### MySQL
 - データベースサーバー
