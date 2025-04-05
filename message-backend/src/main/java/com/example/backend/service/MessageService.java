@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
@@ -19,8 +20,8 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ObjectMapper objectMapper;
 
-    @JmsListener(destination = "messageQueue")
-    @Transactional
+    @JmsListener(destination = "messageQueue", concurrency = "1")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void receiveMessage(String jsonMessage) {
         logger.debug("Received raw message: {}", jsonMessage);
         try {
@@ -50,44 +51,59 @@ public class MessageService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.MANDATORY)
     protected void handleCreate(String content) {
-        logger.debug("Creating new message with content: {}", content);
-        Message message = new Message();
-        message.setContent(content);
-        message.setCreatedAt(LocalDateTime.now());
-        messageRepository.save(message);
-        logger.info("Message created successfully with ID: {}", message.getId());
+        try {
+            logger.debug("Creating new message with content: {}", content);
+            Message message = new Message();
+            message.setContent(content);
+            message.setCreatedAt(LocalDateTime.now());
+            message = messageRepository.save(message);
+            logger.info("Message created successfully with ID: {}", message.getId());
+        } catch (Exception e) {
+            logger.error("Error creating message: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to create message", e);
+        }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.MANDATORY)
     protected void handleUpdate(Long id, String content) {
-        logger.debug("Updating message {} with content: {}", id, content);
-        messageRepository.findById(id).ifPresentOrElse(
-            message -> {
-                message.setContent(content);
-                messageRepository.save(message);
-                logger.info("Message {} updated successfully", id);
-            },
-            () -> {
-                logger.warn("Message {} not found for update", id);
-                throw new RuntimeException("Message not found");
-            }
-        );
+        try {
+            logger.debug("Updating message {} with content: {}", id, content);
+            messageRepository.findById(id).ifPresentOrElse(
+                message -> {
+                    message.setContent(content);
+                    messageRepository.save(message);
+                    logger.info("Message {} updated successfully", id);
+                },
+                () -> {
+                    logger.warn("Message {} not found for update", id);
+                    throw new RuntimeException("Message not found");
+                }
+            );
+        } catch (Exception e) {
+            logger.error("Error updating message {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Failed to update message", e);
+        }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.MANDATORY)
     protected void handleDelete(Long id) {
-        logger.debug("Deleting message: {}", id);
-        messageRepository.findById(id).ifPresentOrElse(
-            message -> {
-                messageRepository.delete(message);
-                logger.info("Message {} deleted successfully", id);
-            },
-            () -> {
-                logger.warn("Message {} not found for deletion", id);
-                throw new RuntimeException("Message not found");
-            }
-        );
+        try {
+            logger.debug("Deleting message: {}", id);
+            messageRepository.findById(id).ifPresentOrElse(
+                message -> {
+                    messageRepository.delete(message);
+                    logger.info("Message {} deleted successfully", id);
+                },
+                () -> {
+                    logger.warn("Message {} not found for deletion", id);
+                    throw new RuntimeException("Message not found");
+                }
+            );
+        } catch (Exception e) {
+            logger.error("Error deleting message {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete message", e);
+        }
     }
 } 

@@ -3,6 +3,13 @@ spring:
     template:
       default-destination: messageQueue
     pub-sub-domain: false
+  datasource:
+    url: jdbc:mysql://mysql:3306/messagedb
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: 60000
 
 server:
   port: 8080

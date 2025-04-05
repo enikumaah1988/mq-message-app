@@ -1,31 +1,128 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>メッセージ送信</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <title>メッセージ管理システム</title>
 </head>
 <body>
-    <div class="container">
-        <h1>メッセージ送信</h1>
-        <div id="feedback" class="feedback" style="display: none;">
-            <span id="feedbackText"></span>
-        </div>
-        <form id="messageForm" onsubmit="handleSubmit(event)">
-            <div class="form-group">
-                <input type="text" id="messageInput" name="message" placeholder="メッセージを入力" required>
-            </div>
-            <button type="submit">送信</button>
-        </form>
-    </div>
+    <!-- タイトルの設定 -->
+    <th:block th:fragment="title">メッセージ管理システム</th:block>
 
-    <!-- 設定を最初に読み込む -->
-    <script th:src="@{/js/config.js}"></script>
-    <!-- 機能別のモジュールを読み込む -->
-    <script th:src="@{/js/feedback.js}"></script>
-    <script th:src="@{/js/message.js}"></script>
-    <script th:src="@{/js/error.js}"></script>
-    <script th:src="@{/js/state.js}"></script>
-    <script th:src="@{/js/validator.js}"></script>
+    <!-- メインコンテンツ -->
+    <div th:fragment="content">
+        <!-- メッセージフォーム -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/messages}" method="post">
+                    <input type="hidden" name="action" th:value="${editMessage != null ? 'UPDATE' : 'CREATE'}">
+                    <input type="hidden" name="id" th:if="${editMessage != null}" th:value="${editMessage.id}">
+                    <input type="hidden" name="page" th:value="${messages.number}">
+                    <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                    <div class="mb-3">
+                        <label for="content" class="form-label">メッセージ</label>
+                        <textarea class="form-control" id="content" name="content" rows="3" required
+                                th:text="${editMessage != null ? editMessage.content : ''}"></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas" th:classappend="${editMessage != null ? 'fa-save' : 'fa-paper-plane'}"></i>
+                            <span th:text="${editMessage != null ? '更新' : '送信'}">送信</span>
+                        </button>
+                        <a th:if="${editMessage != null}" th:href="@{/(page=${messages.number},pageSize=${selectedPageSize})}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            キャンセル
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- アラートメッセージ -->
+        <div th:if="${message}" class="alert alert-dismissible fade show mb-4" 
+             th:classappend="${messageType == 'error'} ? 'alert-danger' : 'alert-success'" role="alert">
+            <span th:text="${message}">メッセージ</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- メッセージ一覧 -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">メッセージ一覧</h5>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="d-flex align-items-center">
+                        <label for="pageSize" class="me-2">表示件数:</label>
+                        <select id="pageSize" class="form-select form-select-sm" style="width: auto;"
+                                onchange="window.location.href='/?page=0&pageSize=' + this.value">
+                            <option th:each="size : ${pageSizes}"
+                                    th:value="${size}"
+                                    th:text="${size + '件'}"
+                                    th:selected="${size == selectedPageSize}">
+                            </option>
+                        </select>
+                    </div>
+                    <a th:href="@{/messages/refresh(page=${messages.number},pageSize=${selectedPageSize})}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-sync-alt me-1"></i>更新
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div th:if="${messages.empty}" class="text-center text-muted py-5">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p class="mb-0">メッセージがありません</p>
+                </div>
+                <div th:if="${!messages.empty}" class="list-group list-group-flush">
+                    <div th:each="message : ${messages}" class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="message-content" th:text="${message.content}"></div>
+                            <div class="d-flex gap-2">
+                                <form th:action="@{/messages}" method="post" class="d-inline">
+                                    <input type="hidden" name="action" value="EDIT">
+                                    <input type="hidden" name="id" th:value="${message.id}">
+                                    <input type="hidden" name="page" th:value="${messages.number}">
+                                    <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-edit me-1"></i>編集
+                                    </button>
+                                </form>
+                                <form th:action="@{/messages}" method="post" class="d-inline"
+                                      onsubmit="return confirm('このメッセージを削除してもよろしいですか？')">
+                                    <input type="hidden" name="action" value="DELETE">
+                                    <input type="hidden" name="id" th:value="${message.id}">
+                                    <input type="hidden" name="page" th:value="${messages.number}">
+                                    <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash-alt me-1"></i>削除
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="far fa-clock me-1"></i>
+                            <span th:text="${#dates.format(message.created_at, 'yyyy/MM/dd HH:mm:ss')}"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${messages.totalPages > 1}" class="card-footer">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item" th:classappend="${messages.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(page=${messages.number - 1},pageSize=${selectedPageSize})}" aria-label="前">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, messages.totalPages - 1)}"
+                            th:classappend="${i == messages.number} ? 'active'">
+                            <a class="page-link" th:href="@{/(page=${i},pageSize=${selectedPageSize})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${messages.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(page=${messages.number + 1},pageSize=${selectedPageSize})}" aria-label="次">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 
