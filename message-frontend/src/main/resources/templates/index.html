@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>メッセージ送信</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <h1>メッセージ送信</h1>
+        <div id="feedback" class="feedback" style="display: none;">
+            <span id="feedbackText"></span>
+        </div>
+        <form id="messageForm" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+                <input type="text" id="messageInput" name="message" placeholder="メッセージを入力" required>
+            </div>
+            <button type="submit">送信</button>
+        </form>
+    </div>
+
+    <!-- 設定を最初に読み込む -->
+    <script th:src="@{/js/config.js}"></script>
+    <!-- 機能別のモジュールを読み込む -->
+    <script th:src="@{/js/feedback.js}"></script>
+    <script th:src="@{/js/message.js}"></script>
+    <script th:src="@{/js/error.js}"></script>
+    <script th:src="@{/js/state.js}"></script>
+    <script th:src="@{/js/validator.js}"></script>
+</body>
+</html> 

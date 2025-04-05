@@ -1,0 +1,13 @@
+spring:
+  jms:
+    template:
+      default-destination: messageQueue
+    pub-sub-domain: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.frontend: DEBUG
+    org.springframework.jms: DEBUG 
