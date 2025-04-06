@@ -58,15 +58,16 @@
 ## 技術スタック
 
 ### フロントエンドサービス（message-frontend）
-- Spring Boot 2.7.0
+- Spring Boot 3.2.3
 - Thymeleaf（レイアウトダイアレクト含む）
 - MyBatis
 - Bootstrap 5.3.0
 - Font Awesome 6.4.0
 - ActiveMQ（メッセージング）
+- Spring Security（セキュリティ）
 
 ### バックエンドサービス（message-backend）
-- Spring Boot 2.7.0
+- Spring Boot 3.2.3
 - MyBatis
 - ActiveMQ（メッセージング）
 - MySQL 8.0
@@ -79,12 +80,20 @@
 - 分離されたJavaScriptファイルによるコード管理
 - MyBatisによるデータアクセス
 - トランザクション管理
+- Spring Securityによるセキュリティ基盤
 
 ### バックエンド
 - MyBatisによるデータアクセス
 - メッセージキューによる非同期処理
 - 階層化されたトランザクション管理
 - 詳細なログ出力
+
+## セキュリティ設定
+- Spring Securityによる基本セキュリティ
+- すべてのリクエストを許可（開発環境用）
+- CSRF保護は無効化（開発環境用）
+- 入力値のバリデーション
+- XSS対策（Thymeleafのデフォルト設定）
 
 ## プロジェクト構造
 ```
@@ -98,12 +107,12 @@ mq-message-app/
 │           │       ├── MessageFrontendApplication.java
 │           │       ├── controller/    # 画面制御
 │           │       ├── service/      # ビジネスロジック
-│           │       ├── mapper/      # MyBatisマッパー
-│           │       └── model/       # データモデル
+│           │       ├── config/       # 設定クラス
+│           │       │   └── SecurityConfig.java
+│           │       └── util/         # ユーティリティ
 │           └── resources/
-│               ├── mybatis/         # MyBatis設定・マッピング
-│               ├── static/         # 静的リソース（JS、CSS）
-│               └── templates/      # Thymeleafテンプレート
+│               ├── static/  # 静的リソース
+│               └── templates/ # Thymeleafテンプレート
 │                   ├── layout/    # 共通レイアウト
 │                   └── fragments/ # 再利用可能なフラグメント
 └── message-backend/        # バックエンドアプリケーション

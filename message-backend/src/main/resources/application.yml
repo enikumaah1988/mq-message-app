@@ -9,14 +9,6 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       initialization-fail-timeout: 60000
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
 
   activemq:
     broker-url: tcp://activemq:61616
@@ -24,13 +16,22 @@ spring:
     password: admin
   jms:
     listener:
-      acknowledge-mode: AUTO
-      concurrency: 1
+      session:
+        acknowledge-mode: AUTO
+      min-concurrency: 1
     pub-sub-domain: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+mybatis:
+  config-location: classpath:mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
 
 logging:
   level:
     com.example.backend: DEBUG
     org.springframework.transaction: DEBUG
-    org.springframework.jms: DEBUG
-    org.springframework.orm.jpa: DEBUG 
+    org.springframework.jms: DEBUG 

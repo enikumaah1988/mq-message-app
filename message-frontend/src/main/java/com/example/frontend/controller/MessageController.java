@@ -43,20 +43,20 @@ public class MessageController {
     @GetMapping
     public String index(Model model,
                        @RequestParam(defaultValue = "0") int page,
-                       @RequestParam(defaultValue = "10") int size,
+                       @RequestParam(defaultValue = "10") int pageSize,
                        @RequestParam(defaultValue = "created_at") String sortField,
                        @RequestParam(defaultValue = "desc") String sortDirection,
                        @RequestParam(required = false) String keyword) {
-        if (!PAGE_SIZES.contains(size)) {
-            size = DEFAULT_PAGE_SIZE;
+        if (!PAGE_SIZES.contains(pageSize)) {
+            pageSize = DEFAULT_PAGE_SIZE;
         }
 
         int totalMessages = messageRepository.count(keyword);
-        int totalPages = (int) Math.ceil((double) totalMessages / size);
-        int offset = page * size;
+        int totalPages = (int) Math.ceil((double) totalMessages / pageSize);
+        int offset = page * pageSize;
 
         List<Map<String, Object>> messages = messageRepository.findAllWithSortAndPaging(
-            offset, size, sortField, sortDirection, keyword);
+            offset, pageSize, sortField, sortDirection, keyword);
 
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
@@ -65,13 +65,13 @@ public class MessageController {
         model.addAttribute("sortDirection", sortDirection);
         model.addAttribute("keyword", keyword);
         model.addAttribute("pageSizes", PAGE_SIZES);
-        model.addAttribute("selectedPageSize", size);
+        model.addAttribute("selectedPageSize", pageSize);
         return "index";
     }
 
     @GetMapping("/messages/refresh")
     public String refreshMessages(@RequestParam(defaultValue = "0") int page,
-                                @RequestParam(defaultValue = "5") int pageSize,
+                                @RequestParam(defaultValue = "10") int pageSize,
                                 @RequestParam(defaultValue = "created_desc") String sort,
                                 @RequestParam(required = false) String keyword,
                                 Model model) {
@@ -129,7 +129,7 @@ public class MessageController {
                               @RequestParam(required = false) Long id,
                               @RequestParam(required = false) String content,
                               @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(defaultValue = "5") int pageSize,
+                              @RequestParam(defaultValue = "10") int pageSize,
                               @RequestParam(defaultValue = "created_desc") String sort,
                               @RequestParam(defaultValue = "") String keyword,
                               RedirectAttributes redirectAttributes,
@@ -212,7 +212,7 @@ public class MessageController {
     @PostMapping("/messages/bulk-delete")
     public String bulkDelete(@RequestParam String ids,
                            @RequestParam(defaultValue = "0") int page,
-                           @RequestParam(defaultValue = "5") int pageSize,
+                           @RequestParam(defaultValue = "10") int pageSize,
                            @RequestParam(defaultValue = "created_desc") String sort,
                            @RequestParam(required = false) String keyword,
                            RedirectAttributes redirectAttributes) {
