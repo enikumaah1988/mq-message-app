@@ -5,30 +5,93 @@
       layout:decorate="~{layout/base}">
 <head>
     <title>メッセージ管理システム</title>
+    <script th:src="@{/js/message.js}"></script>
 </head>
 <body>
     <div layout:fragment="content">
+        <!-- 削除確認モーダル -->
+        <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteConfirmModalLabel">削除の確認</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>以下のメッセージを削除してもよろしいですか？</p>
+                        <div class="alert alert-secondary" id="deleteMessageContent"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                        <form id="deleteForm" th:action="@{/messages}" method="post" class="d-inline">
+                            <input type="hidden" name="action" value="DELETE">
+                            <input type="hidden" name="id">
+                            <input type="hidden" name="page" th:value="${currentPage}">
+                            <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                            <button type="submit" class="btn btn-danger">削除</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 一括削除確認モーダル -->
+        <div class="modal fade" id="bulkDeleteConfirmModal" tabindex="-1" aria-labelledby="bulkDeleteConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bulkDeleteConfirmModalLabel">複数メッセージの削除確認</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>以下のメッセージを削除してもよろしいですか？</p>
+                        <div id="bulkDeleteMessageList"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                        <form id="bulkDeleteForm" th:action="@{/messages/bulk-delete}" method="post" class="d-inline">
+                            <input type="hidden" name="ids">
+                            <input type="hidden" name="page" th:value="${currentPage}">
+                            <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                            <input type="hidden" name="sort" th:value="${sort}">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <button type="submit" class="btn btn-danger">削除</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- メッセージフォーム -->
         <div class="card mb-4">
             <div class="card-body">
                 <form th:action="@{/messages}" method="post">
                     <input type="hidden" name="action" th:value="${editMessage != null ? 'UPDATE' : 'CREATE'}">
                     <input type="hidden" name="id" th:if="${editMessage != null}" th:value="${editMessage.id}">
-                    <input type="hidden" name="page" th:value="${messages.number}">
+                    <input type="hidden" name="page" th:value="${currentPage}">
                     <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                    <input type="hidden" name="sort" th:value="${sort}">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
 
                     <div class="mb-3">
                         <label for="content" class="form-label">メッセージ</label>
                         <textarea class="form-control" id="content" name="content" rows="3" required
-                                th:text="${editMessage != null ? editMessage.content : ''}"></textarea>
+                                maxlength="255" th:text="${editMessage != null ? editMessage.content : ''}"
+                                onkeydown="handleKeyPress(event)"
+                                placeholder="メッセージを入力してください（Ctrl+Enterで送信）"></textarea>
+                        <div class="form-text text-end">
+                            残り<span id="charCount">255</span>文字
+                        </div>
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <div class="text-end">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas" th:classappend="${editMessage != null ? 'fa-save' : 'fa-paper-plane'}"></i>
                             <span th:text="${editMessage != null ? '更新' : '送信'}">送信</span>
                         </button>
-                        <a th:if="${editMessage != null}" th:href="@{/(page=${messages.number},pageSize=${selectedPageSize})}" class="btn btn-secondary">
+                        <a th:if="${editMessage != null}" 
+                           th:href="@{/(page=${messages.number},pageSize=${selectedPageSize},sort=${sort},keyword=${keyword})}" 
+                           class="btn btn-secondary">
                             <i class="fas fa-times"></i> キャンセル
                         </a>
                     </div>
@@ -45,23 +108,41 @@
 
         <!-- メッセージ一覧 -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">メッセージ一覧</h5>
-                <div class="d-flex gap-2 align-items-center">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">メッセージ一覧</h5>
+                    <a th:href="@{/messages/refresh(page=${currentPage},pageSize=${selectedPageSize},sort=${sort},keyword=${keyword})}" 
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-sync-alt me-1"></i>更新
+                    </a>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="d-flex align-items-center">
+                        <label for="search" class="me-2">検索:</label>
+                        <input type="text" id="search" class="form-control form-control-sm" style="width: 200px;"
+                               th:value="${keyword}" placeholder="キーワードを入力..."
+                               onchange="window.location.href='/?page=0&pageSize=' + document.getElementById('pageSize').value + '&sort=' + document.getElementById('sort').value + '&keyword=' + this.value">
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <label for="sort" class="me-2">並び順:</label>
+                        <select id="sort" class="form-select form-select-sm" style="width: auto;"
+                                onchange="window.location.href='/?page=0&pageSize=' + document.getElementById('pageSize').value + '&sort=' + this.value + '&keyword=' + (document.getElementById('search').value || '')">
+                            <option value="created_desc" th:selected="${sort == 'created_desc'}">作成日時（新しい順）</option>
+                            <option value="created_asc" th:selected="${sort == 'created_asc'}">作成日時（古い順）</option>
+                            <option value="updated_desc" th:selected="${sort == 'updated_desc'}">更新日時（新しい順）</option>
+                            <option value="updated_asc" th:selected="${sort == 'updated_asc'}">更新日時（古い順）</option>
+                        </select>
+                    </div>
                     <div class="d-flex align-items-center">
                         <label for="pageSize" class="me-2">表示件数:</label>
                         <select id="pageSize" class="form-select form-select-sm" style="width: auto;"
-                                onchange="window.location.href='/?page=0&pageSize=' + this.value">
+                                onchange="window.location.href='/?page=0&pageSize=' + this.value + '&sort=' + document.getElementById('sort').value + '&keyword=' + (document.getElementById('search').value || '')">
                             <option th:each="size : ${pageSizes}"
                                     th:value="${size}"
                                     th:text="${size + '件'}"
-                                    th:selected="${size == selectedPageSize}">
-                            </option>
+                                    th:selected="${size == selectedPageSize}">5</option>
                         </select>
                     </div>
-                    <a th:href="@{/messages/refresh(page=${messages.number},pageSize=${selectedPageSize})}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-sync-alt me-1"></i>更新
-                    </a>
                 </div>
             </div>
 
@@ -72,53 +153,78 @@
                 </div>
 
                 <div th:if="${!messages.empty}" class="list-group list-group-flush">
+                    <div class="list-group-item bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAllMessages()">
+                                <label class="form-check-label" for="selectAll">すべて選択</label>
+                            </div>
+                            <button id="bulkDeleteBtn" class="btn btn-danger btn-sm" disabled
+                                    onclick="showBulkDeleteConfirmation()">
+                                選択したメッセージを削除
+                            </button>
+                        </div>
+                    </div>
                     <div th:each="message : ${messages}" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-start">
-                            <div class="message-content" th:text="${message.content}"></div>
-                            <div class="d-flex gap-2">
+                            <div class="form-check">
+                                <input class="form-check-input message-checkbox" type="checkbox" 
+                                       th:value="${message.id}" onchange="updateBulkDeleteButton()">
+                            </div>
+                            <div class="message-content flex-grow-1 me-3" style="word-break: break-all;" 
+                                 th:text="${message.content}"></div>
+                            <div class="d-flex gap-2 flex-shrink-0">
                                 <form th:action="@{/messages}" method="post" class="d-inline">
                                     <input type="hidden" name="action" value="EDIT">
                                     <input type="hidden" name="id" th:value="${message.id}">
-                                    <input type="hidden" name="page" th:value="${messages.number}">
+                                    <input type="hidden" name="page" th:value="${currentPage}">
                                     <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+                                    <input type="hidden" name="sort" th:value="${sort}">
+                                    <input type="hidden" name="keyword" th:value="${keyword}">
                                     <button type="submit" class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-edit me-1"></i>編集
                                     </button>
                                 </form>
-                                <form th:action="@{/messages}" method="post" class="d-inline"
-                                    onsubmit="return confirm('このメッセージを削除してもよろしいですか？')">
-                                    <input type="hidden" name="action" value="DELETE">
-                                    <input type="hidden" name="id" th:value="${message.id}">
-                                    <input type="hidden" name="page" th:value="${messages.number}">
-                                    <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
-                                        <i class="fas fa-trash-alt me-1"></i>削除
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                        th:data-message-id="${message.id}"
+                                        th:data-message-content="${message.content}"
+                                        onclick="showDeleteConfirmation(this.getAttribute('data-message-id'), this.getAttribute('data-message-content'))">
+                                    <i class="fas fa-trash-alt me-1"></i>削除
+                                </button>
                             </div>
                         </div>
-                        <small class="text-muted">
-                            <i class="far fa-clock me-1"></i>
-                            <span th:text="${#dates.format(message.created_at, 'yyyy/MM/dd HH:mm:ss')}"></span>
-                        </small>
+                        <div class="text-muted small">
+                            <span class="me-3">
+                                <i class="far fa-clock me-1"></i>作成:
+                                <span class="relative-time" th:data-time="${message.created_at}"
+                                      th:title="${#temporals.format(message.created_at, 'yyyy/MM/dd HH:mm:ss')}">
+                                </span>
+                            </span>
+                            <span th:if="${message.updated_at != message.created_at}">
+                                <i class="fas fa-history me-1"></i>更新:
+                                <span class="relative-time" th:data-time="${message.updated_at}"
+                                      th:title="${#temporals.format(message.updated_at, 'yyyy/MM/dd HH:mm:ss')}">
+                                </span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div th:if="${messages.totalPages > 1}" class="card-footer">
+            <div th:if="${totalPages > 1}" class="card-footer">
                 <nav>
                     <ul class="pagination justify-content-center mb-0">
-                        <li class="page-item" th:classappend="${messages.first} ? 'disabled'">
-                            <a class="page-link" th:href="@{/(page=${messages.number - 1},pageSize=${selectedPageSize})}" aria-label="前">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(page=${currentPage - 1},pageSize=${selectedPageSize},sort=${sort},keyword=${keyword})}" aria-label="前">
                                 <span aria-hidden="true">&laquo;</span>
                             </a>
                         </li>
-                        <li class="page-item" th:each="i : ${#numbers.sequence(0, messages.totalPages - 1)}"
-                            th:classappend="${i == messages.number} ? 'active'">
-                            <a class="page-link" th:href="@{/(page=${i},pageSize=${selectedPageSize})}" th:text="${i + 1}">1</a>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/(page=${i},pageSize=${selectedPageSize},sort=${sort},keyword=${keyword})}" th:text="${i + 1}">1</a>
                         </li>
-                        <li class="page-item" th:classappend="${messages.last} ? 'disabled'">
-                            <a class="page-link" th:href="@{/(page=${messages.number + 1},pageSize=${selectedPageSize})}" aria-label="次">
+                        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/(page=${currentPage + 1},pageSize=${selectedPageSize},sort=${sort},keyword=${keyword})}" aria-label="次">
                                 <span aria-hidden="true">&raquo;</span>
                             </a>
                         </li>

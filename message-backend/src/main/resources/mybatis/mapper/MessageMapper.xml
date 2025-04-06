@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.backend.mapper.MessageMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO messages (content, created_at, updated_at)
+        VALUES (#{content}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE messages
+        SET content = #{content},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM messages WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultType="com.example.backend.model.Message">
+        SELECT
+            id,
+            content,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM messages
+        WHERE id = #{id}
+    </select>
+</mapper> 

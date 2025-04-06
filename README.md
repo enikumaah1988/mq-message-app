@@ -1,245 +1,31 @@
-# Message Queue Application
+# メッセージ管理アプリケーション
 
-このアプリケーションは、メッセージキューを使用したマイクロサービスアーキテクチャのデモンストレーションです。
-
-## 技術スタック
-
-### バックエンド (message-backend)
-- **Java 11**
-- **Spring Boot 2.x**
-  - Spring JMS (メッセージング)
-  - Spring Data JPA (データアクセス)
-- **MySQL 8.0** (データベース)
-- **ActiveMQ 5.15.9** (メッセージブローカー)
-- **Flyway** (データベースマイグレーション)
-
-### フロントエンド (message-frontend)
-- **Java 11**
-- **Spring Boot 2.x**
-  - Spring JMS (メッセージング)
-  - Thymeleaf (テンプレートエンジン)
-- **Bootstrap 5.3.0** (UIフレームワーク)
-- **Font Awesome 6.4.0** (アイコン)
-
-### インフラストラクチャ
-- **Docker** & **Docker Compose** (コンテナ化)
-- **Maven** (ビルドツール)
-
-## データベース設計
-
-### メッセージテーブル (messages)
-```sql
-CREATE TABLE messages (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    content VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## 主な機能
-
-### メッセージ管理
-- メッセージの作成、表示、更新、削除（CRUD操作）
-- JMSを使用した非同期メッセージング
-- データベースでの永続化
-
-### ユーザーインターフェース
-- レスポンシブデザイン
-- ページネーション機能
-  - 可変表示件数（5,10,50,100,200件）
-  - ページ間のナビゲーション
-- 操作フィードバック
-  - 成功/エラーメッセージの表示
-  - 削除時の確認ダイアログ
-- モダンなUI
-  - Bootstrap 5.3.0によるデザイン
-  - Font Awesome 6.4.0アイコンの使用
-
-### アーキテクチャ
-- Thymeleafレイアウトダイアレクト
-  - 共通レイアウト（base.html）
-  - 再利用可能なフラグメント（ヘッダー、フッター）
-- トランザクション管理
-- エラーハンドリング
+## 概要
+このアプリケーションは、メッセージの作成、更新、削除、一覧表示を行うシステムです。フロントエンドとバックエンドの2つのサービスで構成され、メッセージキュー（ActiveMQ）を使用して非同期通信を行います。
 
 ## システム構成
 
-### コンポーネント構成
-```
-mq-message-app/
-├── docker-compose.yml        # コンテナ構成定義
-├── message-frontend/         # フロントエンドアプリケーション
-│   ├── Dockerfile           # フロントエンドのコンテナ定義
-│   ├── pom.xml             # Mavenプロジェクト設定
-│   └── src/
-│       └── main/
-│           ├── java/       # Javaソースコード
-│           │   └── com/example/frontend/
-│           │       ├── MessageFrontendApplication.java  # アプリケーションエントリーポイント
-│           │       ├── controller/    # コントローラー（画面制御）
-│           │       ├── service/      # ビジネスロジック
-│           │       ├── repository/   # データアクセス
-│           │       └── config/       # アプリケーション設定
-│           └── resources/
-│               ├── templates/           # Thymeleafテンプレート
-│               │   ├── base.html       # 共通レイアウト
-│               │   ├── index.html      # メインページ
-│               │   └── fragments/      # 再利用可能なフラグメント
-│               │       ├── header.html # ヘッダー部分
-│               │       └── footer.html # フッター部分
-│               └── static/            # 静的リソース
-└── message-backend/         # バックエンドアプリケーション
-    ├── Dockerfile          # バックエンドのコンテナ定義
-    ├── pom.xml            # Mavenプロジェクト設定
-    └── src/
-        └── main/
-            ├── java/      # Javaソースコード
-            │   └── com/example/backend/
-            │       ├── MessageBackendApplication.java  # アプリケーションエントリーポイント
-            │       ├── entity/      # データモデル
-            │       ├── repository/  # データアクセス
-            │       ├── service/     # ビジネスロジック
-            │       └── listener/    # メッセージリスナー
-            └── resources/
-                └── db/
-                    └── migration/  # Flywayマイグレーションファイル
-
-```
-
-### コンポーネント詳細
-
-#### message-frontend
-- メッセージ管理用Webアプリケーション
-- ポート: 8080
-- 主な機能:
-  - メッセージの表示（MySQLから直接）
-  - メッセージの作成/更新/削除（ActiveMQ経由）
-  - ページネーション処理
-  - レスポンシブなUI提供
-  - 操作フィードバック表示
-
-#### message-backend
-- メッセージ処理アプリケーション
-- ポート: 8082
-- 主な機能:
-  - ActiveMQからの更新メッセージ受信
-  - MySQLへのデータ操作（CRUD）
-  - トランザクション管理
-  - Flywayによるデータベースマイグレーション
-
-#### ActiveMQ
-- メッセージブローカー
-- ポート: 
-  - 61616 (メッセージング)
-  - 8161 (管理コンソール)
-- 機能:
-  - メッセージキューの管理
-  - 更新操作のメッセージ仲介
-  - 非同期処理の実現
-
-#### MySQL
-- データベースサーバー
-- ポート: 3306
-- 機能:
-  - メッセージの永続化
-  - データベース名: messagedb
-- マイグレーション管理:
-  - Flywayによるバージョン管理
-  - マイグレーション履歴テーブル: flyway_schema_history
-
-## アーキテクチャ
-
+### アーキテクチャ図
 ```
 [Frontend (8080)]
     │
-    ├─── [MySQL (3306)] (Read)
+    ├─── [MySQL (3306)] (参照操作)
     │
-    └─── [ActiveMQ (61616)] ──> [Backend (8082)] ──> [MySQL (3306)] (Write)
+    └─── [ActiveMQ (61616)] ──> [Backend (8082)] ──> [MySQL (3306)] (更新操作)
 ```
 
 ### データフロー
-- フロントエンド:
-  - 表示: MySQLから直接データを読み取り
-  - 更新: ActiveMQを介してバックエンドにメッセージを送信
-- ActiveMQ: 
-  - フロントエンドからバックエンドへの更新メッセージ仲介
-  - 作成/更新/削除操作のメッセージング
-- バックエンド:
-  - メッセージの受信と処理
-  - データベースへの書き込み操作
-- MySQL:
-  - フロントエンド: 読み取り専用アクセス（表示用）
-  - バックエンド: 書き込みアクセス（CRUD操作）
+1. メッセージ一覧表示
+   - フロントエンドがMySQLから直接データを取得（MyBatis）
+   - ページネーション、ソート、検索はSQLで処理
 
-### 処理フロー
-1. メッセージ表示
-   - フロントエンドがMySQLから直接データを取得
-   - ページネーションとソートはフロントエンドで処理
-
-2. メッセージ作成/更新/削除
+2. メッセージの作成/更新/削除
    - フロントエンドがActiveMQにメッセージを送信
-   - バックエンドがメッセージを受信し処理
+   - バックエンドがメッセージを受信し処理（MyBatis）
    - 処理結果をMySQLに保存
    - フロントエンドが更新されたデータを表示
 
-## 起動方法
-
-```bash
-cd mq-message-app
-docker compose up --build
-```
-
-## データベース管理
-
-### マイグレーション
-データベースのスキーマ管理にはFlywayを使用しています。マイグレーションファイルは以下の場所に配置されています：
-```
-message-backend/src/main/resources/db/migration/
-```
-
-マイグレーションファイルの命名規則：
-- `V{バージョン}__{説明}.sql`
-- 例: `V1__create_message_table.sql`
-
-### テーブル構造
-#### messageテーブル
-```sql
-CREATE TABLE message (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    content VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### データベース接続
-```bash
-# MySQLコンテナに接続
-docker exec -it mq-message-app-mysql-1 mysql -uroot -proot
-
-# データベース選択
-use messagedb;
-
-# テーブル一覧表示
-show tables;
-
-# メッセージテーブルの内容確認
-select * from message;
-
-# マイグレーション履歴確認
-select * from flyway_schema_history;
-```
-
-### データベース情報
-- データベース名: messagedb
-- ユーザー名: root
-- パスワード: root
-- 主要テーブル:
-  - message: メッセージ保存用テーブル
-  - flyway_schema_history: マイグレーション履歴
-
-## アクセスポイント
-
+### アクセスポイント
 - フロントエンド: http://localhost:8080
 - バックエンド: http://localhost:8082
 - ActiveMQ管理コンソール: http://localhost:8161/admin
@@ -247,20 +33,245 @@ select * from flyway_schema_history;
   - パスワード: admin
 - MySQL: localhost:3306
 
-## メッセージキュー管理
+## 機能詳細
 
-### ActiveMQ管理コンソール
-1. http://localhost:8161/admin にアクセス
-2. ユーザー名: admin、パスワード: admin でログイン
-3. 「Queues」タブを選択
-4. 使用中のキュー:
-   - `messageQueue`: フロントエンドからバックエンドへのメッセージ送信用
-5. 不要なキューの削除:
-   - 削除したいキューの「Delete」をクリック
+### メッセージ管理
+- 最大255文字までのメッセージ入力
+- 文字数のリアルタイムカウント
+- 作成日時と更新日時の表示
+- 削除時の確認ダイアログ
 
-### キューの監視
-管理コンソールでは以下の情報を確認できます：
-- Number of Pending Messages: 未処理メッセージ数
-- Number of Consumers: コンシューマー数
-- Messages Enqueued: キューに追加されたメッセージの総数
-- Messages Dequeued: 処理されたメッセージの総数
+### 一覧表示
+- ページネーション
+- 動的な表示件数の変更（5, 10, 50, 100, 200件）
+- 作成日時/更新日時でのソート（昇順/降順）
+- キーワードによる検索
+- 一括削除機能
+
+### UI/UX
+- レスポンシブデザイン
+- モダンなUIコンポーネント
+- 相対時間表示（「〇分前」など）
+- 操作結果のフィードバック表示
+- キーボードショートカット（Ctrl+Enter での送信）
+
+## 技術スタック
+
+### フロントエンドサービス（message-frontend）
+- Spring Boot 2.7.0
+- Thymeleaf（レイアウトダイアレクト含む）
+- MyBatis
+- Bootstrap 5.3.0
+- Font Awesome 6.4.0
+- ActiveMQ（メッセージング）
+
+### バックエンドサービス（message-backend）
+- Spring Boot 2.7.0
+- MyBatis
+- ActiveMQ（メッセージング）
+- MySQL 8.0
+- Flywayによるマイグレーション管理
+
+## 技術的特徴
+
+### フロントエンド
+- Thymeleafレイアウトダイアレクトによる共通レイアウト
+- 分離されたJavaScriptファイルによるコード管理
+- MyBatisによるデータアクセス
+- トランザクション管理
+
+### バックエンド
+- MyBatisによるデータアクセス
+- メッセージキューによる非同期処理
+- 階層化されたトランザクション管理
+- 詳細なログ出力
+
+## プロジェクト構造
+```
+mq-message-app/
+├── message-frontend/         # フロントエンドアプリケーション
+│   ├── pom.xml             # Mavenプロジェクト設定
+│   └── src/
+│       └── main/
+│           ├── java/       # Javaソースコード
+│           │   └── com/example/frontend/
+│           │       ├── MessageFrontendApplication.java
+│           │       ├── controller/    # 画面制御
+│           │       ├── service/      # ビジネスロジック
+│           │       ├── mapper/      # MyBatisマッパー
+│           │       └── model/       # データモデル
+│           └── resources/
+│               ├── mybatis/         # MyBatis設定・マッピング
+│               ├── static/         # 静的リソース（JS、CSS）
+│               └── templates/      # Thymeleafテンプレート
+│                   ├── layout/    # 共通レイアウト
+│                   └── fragments/ # 再利用可能なフラグメント
+└── message-backend/        # バックエンドアプリケーション
+    ├── pom.xml           # Mavenプロジェクト設定
+    └── src/
+        └── main/
+            ├── java/    # Javaソースコード
+            │   └── com/example/backend/
+            │       ├── MessageBackendApplication.java
+            │       ├── service/    # ビジネスロジック
+            │       ├── mapper/    # MyBatisマッパー
+            │       └── model/     # データモデル
+            └── resources/
+                ├── mybatis/      # MyBatis設定・マッピング
+                └── db/migration/ # Flywayマイグレーション
+```
+
+## セットアップガイド
+
+### 必要なソフトウェア
+- Docker 20.10以上
+- Docker Compose 2.0以上
+- Git
+
+### Dockerコンテナの構成
+```
+[Frontend Container (8080)]
+    │
+    ├─── [MySQL Container (3306)]
+    │
+    └─── [ActiveMQ Container (61616)] ──> [Backend Container (8082)]
+```
+
+### アプリケーションのセットアップ
+
+1. プロジェクトのクローン
+   ```bash
+   git clone https://github.com/yourusername/mq-message-app.git
+   cd mq-message-app
+   ```
+
+2. 環境変数ファイルの作成
+   ```bash
+   # .envファイルを作成（以下は例）
+   MYSQL_ROOT_PASSWORD=root
+   MYSQL_DATABASE=messagedb
+   MYSQL_USER=user
+   MYSQL_PASSWORD=password
+   ACTIVEMQ_ADMIN_LOGIN=admin
+   ACTIVEMQ_ADMIN_PASSWORD=admin
+   ```
+
+### アプリケーションの起動
+
+1. コンテナのビルドと起動
+   ```bash
+   docker compose up -d --build
+   ```
+
+2. 起動確認
+   ```bash
+   docker compose ps
+   ```
+
+### 動作確認
+1. ブラウザで以下のURLにアクセス：
+   - フロントエンド: http://localhost:8080
+   - ActiveMQ管理コンソール: http://localhost:8161/admin
+     - ユーザー名: admin
+     - パスワード: admin
+
+2. 以下の機能を確認：
+   - メッセージの投稿
+   - メッセージの一覧表示
+   - メッセージの編集
+   - メッセージの削除
+
+### トラブルシューティング
+
+1. ログの確認
+   ```bash
+   # 全てのコンテナのログを表示
+   docker compose logs -f
+   
+   # 特定のサービスのログを表示
+   docker compose logs -f [service_name]
+   ```
+
+2. データベースの確認
+   ```bash
+   # MySQLコンテナに接続
+   docker compose exec mysql mysql -u root -p
+   ```
+
+3. コンテナの再起動
+   ```bash
+   # 全てのサービスを再起動
+   docker compose restart
+   
+   # 特定のサービスを再起動
+   docker compose restart [service_name]
+   ```
+
+4. 環境の再構築
+   ```bash
+   # コンテナとボリュームを削除して再構築
+   docker compose down -v
+   docker compose up -d --build
+   ```
+
+### 開発環境の設定
+
+1. IDE
+   - **推奨: Cursor**
+     - AIによる強力なコード補完と提案
+     - インテリジェントなコードナビゲーション
+     - リアルタイムのエラー検出と修正提案
+     - GitとDockerの統合サポート
+     
+     **拡張機能**
+     - Spring Boot Extension Pack
+       - Spring Boot開発支援
+       - Spring Initializrのサポート
+       - Spring Boot設定ファイルの補完
+     - Java Extension Pack
+       - Java言語サポート
+       - デバッガー
+       - テストランナー
+     - Docker
+       - Dockerfileのシンタックスハイライト
+       - Docker Composeのサポート
+       - コンテナの管理
+     - GitLens
+       - Gitの履歴表示の強化
+       - コードの変更履歴の可視化
+     - Thymeleaf
+       - HTMLテンプレートのサポート
+       - シンタックスハイライト
+     - Checkstyle
+       - Javaコードスタイルの検証
+     - Lombok
+       - Lombokアノテーションのサポート
+     - XML
+       - XMLファイルの編集支援
+       - スキーマ検証
+     - YAML
+       - YAMLファイルの編集支援
+       - Docker Compose設定のサポート
+     - Japanese Language Pack
+       - 日本語UIサポート
+     - Error Lens
+       - エラー・警告のインライン表示
+       - 問題箇所の即時フィードバック
+     - Material Icon Theme
+       - ファイルタイプに応じたアイコン表示
+       - プロジェクト構造の視認性向上
+
+   - 代替: IntelliJ IDEA
+     - プロジェクトをMavenプロジェクトとしてインポート
+     - JDK 11を設定
+     - Lombokプラグインをインストール
+     - Docker integrationプラグインをインストール
+
+2. ホットリロードの有効化
+   - `docker-compose.yml`の開発用設定を参照
+
+## 今後の改善点
+- テストコードの追加
+- エラーハンドリングの強化
+- パフォーマンスの最適化
+- セキュリティ機能の強化

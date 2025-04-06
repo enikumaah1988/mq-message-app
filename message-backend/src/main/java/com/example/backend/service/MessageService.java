@@ -1,7 +1,7 @@
 package com.example.backend.service;
 
-import com.example.backend.entity.Message;
-import com.example.backend.repository.MessageRepository;
+import com.example.backend.model.Message;
+import com.example.backend.mapper.MessageMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MessageService {
     private static final Logger logger = LoggerFactory.getLogger(MessageService.class);
-    private final MessageRepository messageRepository;
+    private final MessageMapper messageMapper;
     private final ObjectMapper objectMapper;
 
+    @JmsListener(destination = "messageQueue")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processMessage(String jsonMessage) {
         logger.info("=== メッセージ処理開始 ===");
@@ -27,9 +28,9 @@ public class MessageService {
         logger.debug("現在のトランザクション: {}", org.springframework.transaction.support.TransactionSynchronizationManager.getCurrentTransactionName());
         
         try {
-            Map<String, Object> messageMap = objectMapper.readValue(jsonMessage, Map.class);
+            Map<String, Object> messageMap = objectMapper.readValue(jsonMessage, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
             String action = (String) messageMap.get("action");
-            Map<String, Object> data = (Map<String, Object>) messageMap.get("data");
+            Map<String, Object> data = objectMapper.convertValue(messageMap.get("data"), new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
             
             logger.info("アクション: {}, データ: {}", action, data);
             logger.debug("トランザクションアクティブ: {}", org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
@@ -65,9 +66,10 @@ public class MessageService {
             Message message = new Message();
             message.setContent(content);
             message.setCreatedAt(LocalDateTime.now());
+            message.setUpdatedAt(LocalDateTime.now());
             
             logger.debug("保存前のメッセージ: {}", message);
-            message = messageRepository.save(message);
+            messageMapper.insert(message);
             logger.info("メッセージ作成成功 - ID: {}", message.getId());
             logger.debug("保存後のメッセージ: {}", message);
         } catch (Exception e) {
@@ -82,10 +84,11 @@ public class MessageService {
     protected void handleUpdate(Long id, String content) {
         try {
             logger.debug("メッセージを更新します - ID: {}, 内容: {}", id, content);
-            messageRepository.findById(id).ifPresentOrElse(
+            messageMapper.findById(id).ifPresentOrElse(
                 message -> {
                     message.setContent(content);
-                    messageRepository.save(message);
+                    message.setUpdatedAt(LocalDateTime.now());
+                    messageMapper.update(message);
                     logger.info("メッセージの更新が完了しました - ID: {}", id);
                 },
                 () -> {
@@ -103,9 +106,9 @@ public class MessageService {
     protected void handleDelete(Long id) {
         try {
             logger.debug("メッセージを削除します - ID: {}", id);
-            messageRepository.findById(id).ifPresentOrElse(
+            messageMapper.findById(id).ifPresentOrElse(
                 message -> {
-                    messageRepository.delete(message);
+                    messageMapper.delete(id);
                     logger.info("メッセージの削除が完了しました - ID: {}", id);
                 },
                 () -> {
