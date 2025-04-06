@@ -1,14 +1,13 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
     <title>メッセージ管理システム</title>
 </head>
 <body>
-    <!-- タイトルの設定 -->
-    <th:block th:fragment="title">メッセージ管理システム</th:block>
-
-    <!-- メインコンテンツ -->
-    <div th:fragment="content">
+    <div layout:fragment="content">
         <!-- メッセージフォーム -->
         <div class="card mb-4">
             <div class="card-body">
@@ -17,19 +16,20 @@
                     <input type="hidden" name="id" th:if="${editMessage != null}" th:value="${editMessage.id}">
                     <input type="hidden" name="page" th:value="${messages.number}">
                     <input type="hidden" name="pageSize" th:value="${selectedPageSize}">
+
                     <div class="mb-3">
                         <label for="content" class="form-label">メッセージ</label>
                         <textarea class="form-control" id="content" name="content" rows="3" required
                                 th:text="${editMessage != null ? editMessage.content : ''}"></textarea>
                     </div>
+
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas" th:classappend="${editMessage != null ? 'fa-save' : 'fa-paper-plane'}"></i>
                             <span th:text="${editMessage != null ? '更新' : '送信'}">送信</span>
                         </button>
                         <a th:if="${editMessage != null}" th:href="@{/(page=${messages.number},pageSize=${selectedPageSize})}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i>
-                            キャンセル
+                            <i class="fas fa-times"></i> キャンセル
                         </a>
                     </div>
                 </form>
@@ -38,7 +38,7 @@
 
         <!-- アラートメッセージ -->
         <div th:if="${message}" class="alert alert-dismissible fade show mb-4" 
-             th:classappend="${messageType == 'error'} ? 'alert-danger' : 'alert-success'" role="alert">
+            th:classappend="${messageType == 'error'} ? 'alert-danger' : 'alert-success'" role="alert">
             <span th:text="${message}">メッセージ</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -64,11 +64,13 @@
                     </a>
                 </div>
             </div>
+
             <div class="card-body">
                 <div th:if="${messages.empty}" class="text-center text-muted py-5">
                     <i class="fas fa-inbox fa-3x mb-3"></i>
                     <p class="mb-0">メッセージがありません</p>
                 </div>
+
                 <div th:if="${!messages.empty}" class="list-group list-group-flush">
                     <div th:each="message : ${messages}" class="list-group-item">
                         <div class="d-flex justify-content-between align-items-start">
@@ -84,7 +86,7 @@
                                     </button>
                                 </form>
                                 <form th:action="@{/messages}" method="post" class="d-inline"
-                                      onsubmit="return confirm('このメッセージを削除してもよろしいですか？')">
+                                    onsubmit="return confirm('このメッセージを削除してもよろしいですか？')">
                                     <input type="hidden" name="action" value="DELETE">
                                     <input type="hidden" name="id" th:value="${message.id}">
                                     <input type="hidden" name="page" th:value="${messages.number}">
@@ -102,6 +104,7 @@
                     </div>
                 </div>
             </div>
+
             <div th:if="${messages.totalPages > 1}" class="card-footer">
                 <nav>
                     <ul class="pagination justify-content-center mb-0">
@@ -125,4 +128,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>

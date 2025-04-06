@@ -1,32 +1,36 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" class="h-100">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      class="h-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="~{index :: title}">メッセージ管理システム</title>
+    <title th:text="${title}">メッセージ管理システム</title>
+    
     <!-- 共通CSS -->
     <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/webjars/font-awesome/css/all.min.css}" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body class="d-flex flex-column h-100">
+
     <!-- ヘッダー -->
     <div th:replace="fragments/header :: header"></div>
 
     <!-- メインコンテンツ -->
     <main class="flex-shrink-0">
         <div class="container">
-            <!-- コンテンツ領域 -->
-            <div th:replace="~{index :: content}">
-                <!-- ここに各ページのコンテンツが入ります -->
-            </div>
+            <!-- 子テンプレートの中身がここに挿入される -->
+            <div layout:fragment="content"></div>
         </div>
     </main>
 
     <!-- フッター -->
     <div th:replace="fragments/footer :: footer"></div>
 
-    <!-- 共通JavaScript -->
+    <!-- 共通JS -->
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/common.js}"></script>
 </body>
-</html> 
+</html>

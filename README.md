@@ -25,6 +25,18 @@
 - **Docker** & **Docker Compose** (コンテナ化)
 - **Maven** (ビルドツール)
 
+## データベース設計
+
+### メッセージテーブル (messages)
+```sql
+CREATE TABLE messages (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ## 主な機能
 
 ### メッセージ管理

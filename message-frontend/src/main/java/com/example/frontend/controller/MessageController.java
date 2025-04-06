@@ -58,6 +58,8 @@ public class MessageController {
     public String index(@RequestParam(defaultValue = "0") int page,
                        @RequestParam(defaultValue = "5") int pageSize,
                        Model model) {
+        model.addAttribute("title", "メッセージ管理システム");
+        model.addAttribute("content", "index :: content");
         try {
             if (!PAGE_SIZES.contains(pageSize)) {
                 pageSize = DEFAULT_PAGE_SIZE;
@@ -65,12 +67,12 @@ public class MessageController {
             model.addAttribute("messages", getMessages(page, pageSize));
             model.addAttribute("pageSizes", PAGE_SIZES);
             model.addAttribute("selectedPageSize", pageSize);
-            return "base";
+            return "index";
         } catch (Exception e) {
             log.error("メッセージの取得に失敗しました: {}", e.getMessage(), e);
             model.addAttribute("message", "メッセージの取得に失敗しました");
             model.addAttribute("messageType", "error");
-            return "base";
+            return "index";
         }
     }
 
@@ -86,14 +88,12 @@ public class MessageController {
             model.addAttribute("messages", getMessages(page, pageSize));
             model.addAttribute("pageSizes", PAGE_SIZES);
             model.addAttribute("selectedPageSize", pageSize);
-            model.addAttribute("message", "メッセージ一覧を更新しました");
-            model.addAttribute("messageType", "success");
-            return "base";
+            return "index";
         } catch (Exception e) {
             log.error("メッセージ一覧の更新に失敗しました: {}", e.getMessage(), e);
             model.addAttribute("message", "メッセージ一覧の更新に失敗しました");
             model.addAttribute("messageType", "error");
-            return "base";
+            return "index";
         }
     }
 

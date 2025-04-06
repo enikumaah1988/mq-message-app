@@ -1,25 +1,18 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Footer Fragment</title>
-</head>
-<body>
-    <footer th:fragment="footer" class="footer mt-auto py-3 bg-light">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <span class="text-muted">© 2025 メッセージ管理システム</span>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <span class="text-muted">
-                        <i class="fas fa-code me-1"></i>with
-                        <i class="fas fa-heart mx-1 text-danger"></i>using
-                        <i class="fab fa-java mx-1"></i>Spring Boot &
-                        <i class="fab fa-bootstrap mx-1"></i>Bootstrap
-                    </span>
-                </div>
+<!-- fragments/footer.html -->
+<footer th:fragment="footer" class="footer mt-auto py-3 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start">
+                <span class="text-muted">© 2025 メッセージ管理システム</span>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <span class="text-muted">
+                    <i class="fas fa-code me-1"></i>with
+                    <i class="fas fa-heart mx-1 text-danger"></i>using
+                    <i class="fab fa-java mx-1"></i>Spring Boot &
+                    <i class="fab fa-bootstrap mx-1"></i>Bootstrap
+                </span>
             </div>
         </div>
-    </footer>
-</body>
-</html> 
+    </div>
+</footer>
