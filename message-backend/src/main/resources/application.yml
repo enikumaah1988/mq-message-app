@@ -31,5 +31,6 @@ spring:
 logging:
   level:
     com.example.backend: DEBUG
+    org.springframework.transaction: DEBUG
     org.springframework.jms: DEBUG
-    org.springframework.orm: DEBUG 
+    org.springframework.orm.jpa: DEBUG 
